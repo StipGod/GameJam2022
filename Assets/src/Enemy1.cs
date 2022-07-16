@@ -7,6 +7,7 @@ using Random = System.Random;
 public class Enemy1 : MonoBehaviour
 {
     // Start is called before the first frame update
+    public GameObject enemyBullet;
     GameObject newBullet;
     public int xPos,yPos;
     public Tilemap tm;
@@ -16,12 +17,12 @@ public class Enemy1 : MonoBehaviour
     bool shot = false,moving = false;
     
     void Start()
-    {   array = tmScript.GetMartrix();
+    {   //array = tmScript.GetMartrix();
         Random rnd = new Random();
         while(true){
             xPos = rnd.Next(1, 15);
             yPos = rnd.Next(1, 12);
-            if(array[xPos,yPos] == 0){
+            if(tmScript.GetMartrix(xPos,yPos) == 0){
                 break;
             }
         }
@@ -33,12 +34,12 @@ public class Enemy1 : MonoBehaviour
     // Update is called once per frame
     void Update()
     {   
-        if(!tmScript.turn){
-            if(tmScript.xPos == xPos){
+        if(!tmScript.turn && (!shot && !moving)){
+            if(tmScript.xPos == xPos ){
                 shoot();
-            }else if(tmScript.yPos == yPos){
+            }else if(tmScript.yPos == yPos && !shot){
                 shoot();
-            }else if(System.Math.Abs(tmScript.xPos - xPos) == System.Math.Abs(tmScript.yPos - yPos)){
+            }else if(System.Math.Abs(tmScript.xPos - xPos) == System.Math.Abs(tmScript.yPos - yPos) && !shot){
                 shoot();
             }else{
                 move();
@@ -51,14 +52,10 @@ public class Enemy1 : MonoBehaviour
                 if(System.Math.Sqrt(System.Math.Pow(newBullet.transform.position[0] - moveToBullet[0],2)+System.Math.Pow(newBullet.transform.position[1] - moveToBullet[1],2))<0.001f){
                     Destroy(newBullet);
                     shot = false;
-                    if(System.Math.Sqrt(System.Math.Pow(newBullet.transform.position[0] - moveToBullet[0],2)+System.Math.Pow(newBullet.transform.position[1] - moveToBullet[1],2))<0.001f){
-                    Destroy(newBullet);
-                    shot = false;
                     Debug.Log("kill");
-                    tmScript.ChangeTurn();
+                    tmScript.EndGame();
                     //kill
-                }
-                    
+                
                 }  
         }
         if(moving){
@@ -66,6 +63,7 @@ public class Enemy1 : MonoBehaviour
             transform.position = Vector3.MoveTowards(transform.position, moveToPlayer, step);
             if(System.Math.Sqrt(System.Math.Pow(transform.position[0] - moveToPlayer[0],2)+System.Math.Pow(transform.position[1] - moveToPlayer[1],2))<0.001f){
                     moving = false;
+                    tmScript.ChangeTurn();
                 } 
         }
     }
@@ -73,10 +71,11 @@ public class Enemy1 : MonoBehaviour
     void shoot(){
         Vector3Int cellPosition;
         cellPosition = new Vector3Int(tmScript.xPos,tmScript.yPos,0);
-        newBullet = Instantiate(tmScript.bullet,transform);
+        newBullet = Instantiate(enemyBullet,transform);
         moveToBullet = tm.GetCellCenterWorld(cellPosition);
         shot = true;
         }  
+        
     void move(){
         Random rnd = new Random();
         int seed = rnd.Next(1, 5);
@@ -85,9 +84,9 @@ public class Enemy1 : MonoBehaviour
         cellPosition = new Vector3Int(xPos,yPos,0);
         moveToPlayer = tm.GetCellCenterWorld(cellPosition);
         moving = true;
-        tmScript.ChangeTurn();
     } 
 }
+
 
     
 

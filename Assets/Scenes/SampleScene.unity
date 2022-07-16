@@ -2070,7 +2070,10 @@ MonoBehaviour:
   bulletSpeed: 12.79
   dice1: 0
   dice2: 0
+  xPos: 0
+  yPos: 0
   hexList: []
+  turn: 1
 --- !u!1 &1894734887
 GameObject:
   m_ObjectHideFlags: 0
@@ -2101,6 +2104,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f1357371937a7049b37f706e9fe7f53, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  xPos: 0
+  yPos: 0
+  tm: {fileID: 1845603866}
+  tmScript: {fileID: 1845603867}
 --- !u!212 &1894734889
 SpriteRenderer:
   m_ObjectHideFlags: 0

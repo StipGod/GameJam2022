@@ -15,7 +15,7 @@ public class TilemapScript : MonoBehaviour
     public int xPos = 0,yPos = 0;
     Vector2 worldPoint;
     Vector3 moveToPlayer,moveToBullet;
-    int[,] array = new int[14, 11];
+    public int[,] array = new int[14, 11];
     public List<GameObject> hexList;    
     bool shot = false,moving = false,dice = false;
     public bool turn = true;
@@ -82,13 +82,17 @@ public class TilemapScript : MonoBehaviour
                     CleanMatrix();
                     GetValidPositions();
                     DrawValidPos();
-                    if(dice){
-                        usedDice = 1;
+                    if (usedDice == 0)
+                    {
+                        if(dice){
+                            usedDice = 1;
+                        }else{
+                            usedDice = 2;
+                        }
                     }else{
-                        usedDice = 2;
+                        RollDice(); 
                     }
-                    dice = !dice;
-                    ChangeTurn();
+                    ChangeDice();
                 } 
             }
             if(shot){
@@ -100,13 +104,17 @@ public class TilemapScript : MonoBehaviour
                     CleanMatrix();
                     GetValidPositions();
                     DrawValidPos();
-                    if(dice){
-                        usedDice = 1;
+                    if (usedDice == 0)
+                    {
+                        if(dice){
+                            usedDice = 1;
+                        }else{
+                            usedDice = 2;
+                        }
                     }else{
-                        usedDice = 2;
+                        RollDice(); 
                     }
-                    dice = !dice;
-                    ChangeTurn();
+                    ChangeDice();
                 }  
             }
         }
@@ -115,22 +123,30 @@ public class TilemapScript : MonoBehaviour
         Random rnd = new Random();
         dice1 = rnd.Next(1, 7);
         dice2 = rnd.Next(1, 7);
+        usedDice = 0;
+        dice = true;
+        currentDice = dice1;
+        ChangeTurn();
     }
 
     private void ChangeDice(){
-        
         if(usedDice == 0){
-            CleanMatrix();
-            GetValidPositions();
-            DrawValidPos();
-            
             if(dice){
                 currentDice = dice1;
             }else{
                 currentDice = dice2;
             }
             dice = !dice;
+
+        }else if(usedDice == 1){
+            currentDice = dice1;
+        }else{
+            currentDice = dice2;
         }
+
+        CleanMatrix();
+        GetValidPositions();
+        DrawValidPos();
     }
 
     private void GetValidPositions(){
@@ -142,17 +158,36 @@ public class TilemapScript : MonoBehaviour
             {   
                 auxXPos = xPos+i*currentDice;
                 auxYPos = yPos+j*currentDice;
-                if (auxXPos>=0 && auxXPos<array.GetUpperBound(0) && auxYPos>=0 && auxYPos<array.GetUpperBound(1))
-                {   
+                if((i==0 || j ==0)){
+                    if (auxXPos<0)
+                    {
+                        auxXPos = 0;
+                    }else if(auxXPos>=array.GetUpperBound(0)){
+                        auxXPos = array.GetUpperBound(0)-1;
+                    }
+                    if (auxYPos<0)
+                    {
+                        auxYPos = 0;
+                    }else if(auxYPos>=array.GetUpperBound(1)){
+                        auxYPos = array.GetUpperBound(1)-1;
+                    }
                     if(array[auxXPos,auxYPos] == 0){
                         array[auxXPos,auxYPos] = -1;
                     } 
-                    
+                }else{
+                    while(!(auxXPos>=0 && auxXPos<array.GetUpperBound(0) && auxYPos>=0 && auxYPos<array.GetUpperBound(1)) ){
+                        auxXPos -= i;
+                        auxYPos -= j;
+                    }
+                    if(array[auxXPos,auxYPos] == 0){
+                        array[auxXPos,auxYPos] = -1;
+                    }
                 }
+                
+                
+            }
             }
         }
-    }
-
     private void DrawValidPos(){
         Vector3Int auxPos;
         for (int i  = 0; i < array.GetUpperBound(0); i++)
@@ -188,10 +223,12 @@ public class TilemapScript : MonoBehaviour
         turn = !turn;
     }
 
-    public int[,] GetMartrix(){
-        return array;
+    public int GetMartrix(int i,int j){
+        return array[i,j];
     }
-    
+    public void EndGame(){
+
+    }
 }
 
 
