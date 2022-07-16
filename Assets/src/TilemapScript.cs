@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using Random = System.Random;
 
 public class TilemapScript : MonoBehaviour
 {
@@ -10,13 +11,13 @@ public class TilemapScript : MonoBehaviour
     GameObject newBullet;
     public float speed = 30f,bulletSpeed = 30f;
     public int dice1,dice2;
-    int currentDice;
+    int currentDice, usedDice = 0;
     int xPos = 0,yPos = 0;
     Vector2 worldPoint;
     Vector3 moveToPlayer,moveToBullet;
     int[,] array = new int[14, 11];
     public List<GameObject> hexList;    
-    bool shot = false,moving = false,dice;
+    bool shot = false,moving = false,dice = false,turn = true;
     void Start() {
 
         hexList = new List<GameObject>();
@@ -30,90 +31,106 @@ public class TilemapScript : MonoBehaviour
         }
         array[xPos,yPos] = 1;
 
-        dice1 = 3;
-        dice2 = 6;
+        RollDice();
         currentDice = dice1;
-        moveToPlayer =  tm.GetCellCenterWorld(tm.WorldToCell((Vector3.zero)));
+        moveToPlayer =  tm.GetCellCenterWorld(tm.WorldToCell(Vector3.zero));
         
         GetValidPositions();
         DrawValidPos();
     }
     void Update()
-    {   
-        if (Input.GetMouseButtonDown(0))
-        {   
-            worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            Vector3Int cellPosition = tm.WorldToCell(worldPoint);
-            if (cellPosition[0]>=0 && cellPosition[0]<array.GetUpperBound(0) && cellPosition[1]>=0 && cellPosition[1]<array.GetUpperBound(1))
-                {
-                if(array[cellPosition[0],cellPosition[1]] == -1){
-                    //p.transform.position = tm.GetCellCenterWorld(cellPosition);
-                    moveToPlayer = tm.GetCellCenterWorld(cellPosition);
+    {   if(turn){
+            if (Input.GetMouseButtonDown(0))
+            {   
+                worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                Vector3Int cellPosition = tm.WorldToCell(worldPoint);
+                if (cellPosition[0]>=0 && cellPosition[0]<array.GetUpperBound(0) && cellPosition[1]>=0 && cellPosition[1]<array.GetUpperBound(1))
+                    {
+                    if(array[cellPosition[0],cellPosition[1]] == -1){
+                        //p.transform.position = tm.GetCellCenterWorld(cellPosition);
+                        moveToPlayer = tm.GetCellCenterWorld(cellPosition);
 
-                    array[xPos,yPos] = 0;
-                    xPos = cellPosition[0];
-                    yPos = cellPosition[1];
-                    array[cellPosition[0],cellPosition[1]] = 1;
-                    moving = true;
+                        array[xPos,yPos] = 0;
+                        xPos = cellPosition[0];
+                        yPos = cellPosition[1];
+                        array[cellPosition[0],cellPosition[1]] = 1;
+                        moving = true;
+                        }
                     }
-                }
-        }else if(Input.GetMouseButtonDown(1)){
-            worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            Vector3Int cellPosition = tm.WorldToCell(worldPoint);
-            if (cellPosition[0]>=0 && cellPosition[0]<array.GetUpperBound(0) && cellPosition[1]>=0 && cellPosition[1]<array.GetUpperBound(1))
-                {
-                if(array[cellPosition[0],cellPosition[1]] == -1 && !shot){
-                    //p.transform.position = tm.GetCellCenterWorld(cellPosition);
-                    
-                    newBullet = Instantiate(bullet,p.transform);
-                    moveToBullet = tm.GetCellCenterWorld(cellPosition);
-                    shot = true;
+            }else if(Input.GetMouseButtonDown(1)){
+                worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                Vector3Int cellPosition = tm.WorldToCell(worldPoint);
+                if (cellPosition[0]>=0 && cellPosition[0]<array.GetUpperBound(0) && cellPosition[1]>=0 && cellPosition[1]<array.GetUpperBound(1))
+                    {
+                    if(array[cellPosition[0],cellPosition[1]] == -1 && !shot){
+                        //p.transform.position = tm.GetCellCenterWorld(cellPosition);
+                        
+                        newBullet = Instantiate(bullet,p.transform);
+                        moveToBullet = tm.GetCellCenterWorld(cellPosition);
+                        shot = true;
+                        }
                     }
-                }
-            
-        }else if(Input.GetMouseButtonDown(2)){
-            ChangeDice();
-        }
+                
+            }else if(Input.GetMouseButtonDown(2)){
+                ChangeDice();
+            }
 
-        if(moving){
-            var step =  speed * Time.deltaTime; 
-            p.transform.position = Vector3.MoveTowards(p.transform.position, moveToPlayer, step);
-            if(System.Math.Sqrt(System.Math.Pow(p.transform.position[0] - moveToPlayer[0],2)+System.Math.Pow(p.transform.position[1] - moveToPlayer[1],2))<0.001f){
-                moving = false;
-                CleanMatrix();
-                GetValidPositions();
-                DrawValidPos();
-            } 
-        }
-        if(shot){
-            var step =  bulletSpeed * Time.deltaTime;
-            newBullet.transform.position = Vector3.MoveTowards(newBullet.transform.position, moveToBullet, step);
-            if(System.Math.Sqrt(System.Math.Pow(newBullet.transform.position[0] - moveToBullet[0],2)+System.Math.Pow(newBullet.transform.position[1] - moveToBullet[1],2))<0.001f){
-                Destroy(newBullet);
-                shot = false;
-                CleanMatrix();
-                GetValidPositions();
-                DrawValidPos();
-            }  
+            if(moving){
+                var step =  speed * Time.deltaTime; 
+                p.transform.position = Vector3.MoveTowards(p.transform.position, moveToPlayer, step);
+                if(System.Math.Sqrt(System.Math.Pow(p.transform.position[0] - moveToPlayer[0],2)+System.Math.Pow(p.transform.position[1] - moveToPlayer[1],2))<0.001f){
+                    moving = false;
+                    CleanMatrix();
+                    GetValidPositions();
+                    DrawValidPos();
+                    if(dice){
+                        usedDice = 1;
+                    }else{
+                        usedDice = 2;
+                    }
+                    dice = !dice;
+                    changeTurn();
+                } 
+            }
+            if(shot){
+                var step =  bulletSpeed * Time.deltaTime;
+                newBullet.transform.position = Vector3.MoveTowards(newBullet.transform.position, moveToBullet, step);
+                if(System.Math.Sqrt(System.Math.Pow(newBullet.transform.position[0] - moveToBullet[0],2)+System.Math.Pow(newBullet.transform.position[1] - moveToBullet[1],2))<0.001f){
+                    Destroy(newBullet);
+                    shot = false;
+                    CleanMatrix();
+                    GetValidPositions();
+                    DrawValidPos();
+                    if(dice){
+                        usedDice = 1;
+                    }else{
+                        usedDice = 2;
+                    }
+                    dice = !dice;
+                    changeTurn();
+                }  
+            }
         }
     }
     private void RollDice(){
-        //dice1 = random.Next(7);
-        //dice2 = random.Next(7);
-
+        Random rnd = new Random();
+        dice1 = rnd.Next(1, 7);
+        dice2 = rnd.Next(1, 7);
     }
 
     private void ChangeDice(){
-        CleanMatrix();
-        GetValidPositions();
-        DrawValidPos();
         
-        if(dice){
-            currentDice = dice1;
-            dice = false;
-        }else{
-            currentDice = dice2;
-            dice = true;
+        if(usedDice == 0){
+            CleanMatrix();
+            GetValidPositions();
+            DrawValidPos();
+            
+            if(dice){
+                currentDice = dice1;
+            }else{
+                currentDice = dice2;
+            }
+            dice = !dice;
         }
     }
 
@@ -130,10 +147,6 @@ public class TilemapScript : MonoBehaviour
                 {   
                     if(array[auxXPos,auxYPos] == 0){
                         array[auxXPos,auxYPos] = -1;
-                        //auxPos = new Vector3(auxXPos-i,auxYPos-j,0); 
-                        //Vector3Int cellPosition = tm.WorldToCell(auxPos);
-                        //GameObject hexItem = Instantiate(xxx,tm.GetCellCenterWorld(cellPosition),Quaternion.identity);
-                        //hexList.Add(hexItem);
                     } 
                     
                 }
@@ -171,6 +184,13 @@ public class TilemapScript : MonoBehaviour
         {
             Destroy(obj);
         }
+    }
+
+    public void changeTurn(){
+        if(turn){
+            //poner los enemigos a moverse
+        }
+        turn = !turn;
     }
 }
 
