@@ -9,15 +9,16 @@ public class TilemapScript : MonoBehaviour
     public Tilemap tm;
     public GameObject p,bullet,xxx;
     GameObject newBullet;
-    public float speed = 30f,bulletSpeed = 30f;
+    public float speed = 10f,bulletSpeed = 10f;
     public int dice1,dice2;
     int currentDice, usedDice = 0;
-    int xPos = 0,yPos = 0;
+    public int xPos = 0,yPos = 0;
     Vector2 worldPoint;
     Vector3 moveToPlayer,moveToBullet;
     int[,] array = new int[14, 11];
     public List<GameObject> hexList;    
-    bool shot = false,moving = false,dice = false,turn = true;
+    bool shot = false,moving = false,dice = false;
+    public bool turn = true;
     void Start() {
 
         hexList = new List<GameObject>();
@@ -63,8 +64,6 @@ public class TilemapScript : MonoBehaviour
                 if (cellPosition[0]>=0 && cellPosition[0]<array.GetUpperBound(0) && cellPosition[1]>=0 && cellPosition[1]<array.GetUpperBound(1))
                     {
                     if(array[cellPosition[0],cellPosition[1]] == -1 && !shot){
-                        //p.transform.position = tm.GetCellCenterWorld(cellPosition);
-                        
                         newBullet = Instantiate(bullet,p.transform);
                         moveToBullet = tm.GetCellCenterWorld(cellPosition);
                         shot = true;
@@ -89,7 +88,7 @@ public class TilemapScript : MonoBehaviour
                         usedDice = 2;
                     }
                     dice = !dice;
-                    changeTurn();
+                    ChangeTurn();
                 } 
             }
             if(shot){
@@ -107,7 +106,7 @@ public class TilemapScript : MonoBehaviour
                         usedDice = 2;
                     }
                     dice = !dice;
-                    changeTurn();
+                    ChangeTurn();
                 }  
             }
         }
@@ -162,7 +161,6 @@ public class TilemapScript : MonoBehaviour
             {
                 if(array[i,j] == -1){
                     auxPos = new Vector3Int(i,j,0); 
-                    Debug.Log(i+","+j);
                     GameObject hexItem = Instantiate(xxx,tm.GetCellCenterWorld(auxPos),Quaternion.identity);
                     hexList.Add(hexItem);    
                 }
@@ -186,12 +184,14 @@ public class TilemapScript : MonoBehaviour
         }
     }
 
-    public void changeTurn(){
-        if(turn){
-            //poner los enemigos a moverse
-        }
+    public void ChangeTurn(){
         turn = !turn;
     }
+
+    public int[,] GetMartrix(){
+        return array;
+    }
+    
 }
 
 
